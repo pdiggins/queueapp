@@ -1,0 +1,13 @@
+---
+version: '2.3'
+
+services:
+  client:
+    container_name: client.queue_app
+    build: 
+      context: .
+      target: release
+    environment:
+      - PORT=80
+    ports:
+      - 4000:80
