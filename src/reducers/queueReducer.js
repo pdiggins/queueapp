@@ -54,6 +54,7 @@ const queueReducer = (state = defaultQueueState, action = defaultAction) => {
             let working_item = null;
             if (newPending.length > 0) {
                 working_item = newPending.shift();
+                working_item.status = queueConstants.STARTED;
             }
 
             return {

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import {
@@ -22,6 +22,7 @@ import QueueIcon from '@mui/icons-material/Queue';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
 import queueConstants from '../constants/queueConstants';
 
 import {
@@ -31,6 +32,8 @@ import {
 	updateProgress,
 } from '../actions/queueActions';
 
+import RemoveItemConfirm from './dialogs/RemoveItemConfirm';
+
 const styles = () => ({
 	icon: {
 		verticalAlign: "middle",	
@@ -39,6 +42,8 @@ const styles = () => ({
 
 const QueueList = ({ classes, item, index}) => {
 	const dispatch = useDispatch();
+	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [deleteType, setDeleteType] = useState(queueConstants.PENDING);
 
 	let durationInSeconds = item.duration;
 	if (item.timeFormat === "minutes") {
@@ -61,49 +66,68 @@ const QueueList = ({ classes, item, index}) => {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [item])
 
+	const onRemoveConfirm = () => {
+		if (deleteType === queueConstants.PENDING) {
+			dispatch(cancelPendingItem(item, index-1))
+		} else {
+			dispatch(cancelRunningItem(item))
+		}
+		setConfirmDelete(false);
+	}
+
+	const onRemoveCancel = () => {
+		setConfirmDelete(false);
+	}
+
 	const actionIcon = (status) => {
 		if (status === queueConstants.PENDING) {
 			return (
 				<IconButton
 					aria-label="remove"
-					onClick={() => dispatch(cancelPendingItem(item, index-1))}
+					onClick={() => {
+						setDeleteType(queueConstants.PENDING);
+						setConfirmDelete(true);
+					}}
 				>
-            <DeleteIcon />
-          </IconButton>
+			<DeleteIcon />
+		  </IconButton>
 			);
 		}
 		if (status === queueConstants.STARTED) {
 			return (
 				<IconButton
 					aria-label="remove"
-					onClick={() => dispatch(cancelRunningItem(item))}
+					onClick={() => {
+						setDeleteType(queueConstants.STARTED);
+						setConfirmDelete(true);
+					}}
 				>
-            <RemoveCircleIcon sx={{ color: red[500] }} />
-          </IconButton>
+			<RemoveCircleIcon sx={{ color: red[500] }} />
+		  </IconButton>
 			);
 		}
 		if (status === queueConstants.COMPLETED) {
 			return (
-        <CheckCircleIcon color="success" />
+		<CheckCircleIcon color="success" />
 			)
 		}
 		if (status === queueConstants.CANCELED) {
 			return (
-        <RemoveCircleIcon />
+		<RemoveCircleIcon />
 			);
 		}
 		return null;
 	};
-    
+	
   return (
-    <Paper>
-      <Grid
+	<Paper>
+	  <Grid
 				container
 				justifyContent="center"
 				alignItems="center"
 				spacing={3}
 			>
-        <Grid item xs={2}>
+		<Grid item xs={2}>
 					<Typography varient="body1" align="left">
 						<QueueIcon className={classes.icon} />
 						{`Job Name: ${item.itemName}`}
@@ -111,11 +135,11 @@ const QueueList = ({ classes, item, index}) => {
 				</Grid>
 				<Grid item xs={2}>
 					<Typography varient="body1" align="left">
-          	<ScheduleIcon className={classes.icon} />
+		  	<ScheduleIcon className={classes.icon} />
 						{`Duration: ${item.duration} ${item.timeFormat}`}
 					</Typography>
-        </Grid>
-        <Grid item xs={4}>
+		</Grid>
+		<Grid item xs={4}>
 					<Typography varient="body1">
 						{`Status: ${item.status}`}
 					</Typography>
@@ -125,15 +149,21 @@ const QueueList = ({ classes, item, index}) => {
 							value={item.progress}
 						/>
 					}
-        </Grid>
+		</Grid>
 				<Grid item xs={3} >
 					<div />
 				</Grid>
-        <Grid item xs={1}>
+		<Grid item xs={1}>
 					{actionIcon(item.status)}
-        </Grid>
-      </Grid>
-    </Paper>
+		</Grid>
+	  </Grid>
+		<RemoveItemConfirm
+			open={confirmDelete}
+			name={item.itemName}
+			onSubmit={onRemoveConfirm}
+			onClose={onRemoveCancel}
+		/>
+	</Paper>
   )
 };
 

@@ -18,9 +18,6 @@ const QueueList = ({ pending }) => {
       items = completedItems;
     }
 
-    console.log('test queue list');
-    console.log(items);
-
     return (
       <div>
         {
